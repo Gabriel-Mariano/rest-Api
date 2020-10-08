@@ -37,5 +37,20 @@ module.exports = {
                     message:"Usuário inserido com sucesso"
                 });
             }); 
+    },
+    async delete(req,res){
+        const id  = req.params.id_usuario;
+        
+        const sql = "DELETE FROM usuarios WHERE id = ?";
+        await conn.query(sql,[id],function(error,results,fields){
+            if(error){
+                return res.status(500).send({
+                    message:error
+                });
+            }
+            res.status(200).send({
+                message:`Usuário de id:${id} foi excluído com sucesso.`
+            });
+        });
     }
 }

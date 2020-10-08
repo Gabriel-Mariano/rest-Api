@@ -1,8 +1,9 @@
 const express = require("express");
 const route = express.Router();
-const selectController = require("./controllers/selectController");
+const usersController = require("./controllers/usersController");
 
-route.get("/usuarios",selectController.index);
-route.post("/usuarios",selectController.create);
+route.get("/usuarios",usersController.index);
+route.post("/usuarios",usersController.create);
+route.delete("/usuarios/:id_usuario",usersController.delete);
 
 module.exports = route;
