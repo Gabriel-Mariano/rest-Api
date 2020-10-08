@@ -1,9 +1,9 @@
 const mysql   = require("mysql");
 const connect = mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password:'',
-    database:'rest'
+    host:process.env.MYSQL_HOST, 
+    user:process.env.MYSQL_USER,
+    password:process.env.MYSQL_PASSWORD,
+    database:process.env.MYSQL_DATABASE
 });
 
 // Use ' .connect ' para conectar ao banco de dados.
