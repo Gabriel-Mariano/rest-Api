@@ -1,4 +1,5 @@
 const conn = require("../database/connection");
+const bcrypt = require("bcrypt");
 
 module.exports = {
     // Método para listar usuários do banco de dados
@@ -25,24 +26,43 @@ module.exports = {
             city: req.body.city,
             bestTech: req.body.bestTech /* ** Tecnologia Dominante ** */
         }
-         
-        const sql = `INSERT INTO usuarios (nome, descricao, email, password, nascimento, genero, cidade, stack) 
-                     VALUES(?,?,?,?,?,?,?,?)`;
-            await conn.query(sql,[user.name, user.description, user.email, user.password, user.birth,user.genre, user.city, user.bestTech ],
-                  function(error,results,fields){
-                if(error){
-                    return res.status(500).send({
-                        message:error
-                    });
-                }
-                res.status(200).send({
-                    message:"Usuário inserido com sucesso"
-                });
-            }); 
 
+        
+
+        await conn.query(`SELECT * FROM usuarios WHERE email = ?`,[user.email],function(error,results, fields){
+            if(error){
+                return res.status(500).send({ message: error });
+            }
+            if(results.length >=1){
+                return res.status(409).send({ message:'email já cadastrado'});
+            }
+
+
+                bcrypt.hash(user.password,10,function(errBcrypt,hash){
+                    if(errBcrypt){
+                        return res.status(500).send({ error:errBcrypt});
+                    }
+                
+            
+        
+            const sql = `INSERT INTO usuarios (nome, descricao, email, password, nascimento, genero, cidade, stack) 
+                        VALUES(?,?,?,?,?,?,?,?)`;
+                 conn.query(sql,[user.name, user.description, user.email, hash, user.birth,user.genre, user.city, user.bestTech ],
+                    function(error,results,fields){
+                    if(error){
+                        return res.status(500).send({
+                            message:error
+                        });
+                    }
+                    res.status(200).send({
+                        message:"Usuário inserido com sucesso"
+                    });
+                }); 
+            });  
+        });
     },
+    // Método para atualizar dados do usuário no bando de dados
     async update(req,res){
-        // Método para atualizar dados do usuário no bando de dados
         const user = {
             description: req.body.description,
             genre: req.body.genre,
