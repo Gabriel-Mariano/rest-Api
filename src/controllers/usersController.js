@@ -1,5 +1,6 @@
 const conn = require("../database/connection");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 
 module.exports = {
     // Método para listar usuários do banco de dados
@@ -28,16 +29,15 @@ module.exports = {
         }
 
         
-
         await conn.query(`SELECT * FROM usuarios WHERE email = ?`,[user.email],function(error,results, fields){
             if(error){
                 return res.status(500).send({ message: error });
             }
-            if(results.length >=1){
+            if(results.length >0 ){
                 return res.status(409).send({ message:'email já cadastrado'});
             }
 
-
+            // Biblioteca que cria um hash de senha
                 bcrypt.hash(user.password,10,function(errBcrypt,hash){
                     if(errBcrypt){
                         return res.status(500).send({ error:errBcrypt});
@@ -111,6 +111,44 @@ module.exports = {
             }
             res.status(202).send({
                 message:`Usuário de id:${id} foi excluído com sucesso.`
+            });
+        });
+    },
+    // Método de Login de usuário
+    async login(req,res){
+        const user = {
+            email:req.body.email,
+            password:req.body.password
+        }
+
+        const sql = "SELECT * FROM usuarios WHERE email = ? ";
+
+    await conn.query(sql,[user.email],function(error,results,fields){
+            if(error){
+                return res.status(500).send({ message: error });
+            }
+            if(results.length <1){
+                return res.status(401).send({ message: 'Falha na autenticação '});
+            }
+
+
+            bcrypt.compare(user.password,results[0].password,(err,result)=>{
+                if(err){
+                    return res.status(401).send({ message: err});
+                }
+                if(result){
+                    const token = jwt.sign({
+                        id:results[0].id,
+                        name:results[0].nome
+                    },process.env.JWT_KEY, { expiresIn:60*60 });
+                    res.status(200).json({
+                        user:results[0].nome,
+                        token:token
+                    });
+                }else{
+                    res.status(401).send({ message: 'Falha na autenticação '});
+                }
+  
             });
         });
     }
