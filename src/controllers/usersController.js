@@ -5,7 +5,24 @@ const jwt = require('jsonwebtoken');
 module.exports = {
     // Método para listar usuários do banco de dados
     async index(req,res){
-        await conn.query("SELECT * FROM usuarios",function(error,results,fields){
+        // Construção da lógica para páginação
+        var {page} = req.query; // --> http://localhost:3080/usuarios?page=1 --> page = 1;
+        
+        if(page === undefined){
+            page = 1;
+        }
+
+        const limit  = 10;
+        const count  = (page-1)*limit;
+        
+        /* 
+           **  MySQL 
+            - A cláusula LIMIT é utilizada para limitar o número de resultados de uma Query. 
+            - O comando OFFSET indica o início da leitura, e o LIMIT o máximo de registros a serem lidos. 
+           ** 
+        */
+
+        await conn.query(`SELECT * FROM usuarios LIMIT 10 OFFSET ${count}`,function(error,results,fields){
             if(error){
                 return res.status(500).send({
                     message:error
